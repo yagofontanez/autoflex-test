@@ -6,6 +6,9 @@ import com.yago.inventory_api.rawmaterial.dto.RawMaterialUpdateRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yago.inventory_api.common.exception.ConflictException;
+import com.yago.inventory_api.common.exception.NotFoundException;
+
 import java.util.List;
 
 @Service
@@ -20,7 +23,7 @@ public class RawMaterialService {
     @Transactional
     public RawMaterialResponse create(RawMaterialCreateRequest req) {
         if (repository.existsByCode(req.code)) {
-            throw new IllegalArgumentException("Raw material code already exists");
+            throw new ConflictException("Raw material code already exists");
         }
 
         RawMaterial rm = new RawMaterial();
@@ -38,14 +41,14 @@ public class RawMaterialService {
 
     public RawMaterialResponse findById(Long id) {
         RawMaterial rm = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Raw material not found."));
+                .orElseThrow(() -> new NotFoundException("Raw material not found."));
         return toResponse(rm);
     }
 
     @Transactional
     public RawMaterialResponse update(Long id, RawMaterialUpdateRequest req) {
         RawMaterial rm = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Raw material not found."));
+                .orElseThrow(() -> new NotFoundException("Raw material not found."));
 
         rm.setName(req.name);
         rm.setStockQuantity(req.stockQuantity);
@@ -57,7 +60,7 @@ public class RawMaterialService {
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("Raw material not found.");
+            throw new NotFoundException("Raw material not found.");
         }
         repository.deleteById(id);
     }
