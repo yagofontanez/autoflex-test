@@ -6,6 +6,9 @@ import com.yago.inventory_api.product.dto.ProductUpdateRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yago.inventory_api.common.exception.ConflictException;
+import com.yago.inventory_api.common.exception.NotFoundException;
+
 import java.util.List;
 
 @Service
@@ -20,7 +23,7 @@ public class ProductService {
     @Transactional
     public ProductResponse create(ProductCreateRequest req) {
         if (repository.existsByCode(req.code)) {
-            throw new IllegalArgumentException("Product code already exists");
+            throw new ConflictException("Product code already exists");
         }
 
         Product p = new Product();
@@ -38,14 +41,14 @@ public class ProductService {
 
     public ProductResponse findById(Long id) {
         Product p = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found."));
+                .orElseThrow(() -> new NotFoundException("Product not found."));
         return toResponse(p);
     }
 
     @Transactional
     public ProductResponse update(Long id, ProductUpdateRequest req) {
         Product p = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found."));
+                .orElseThrow(() -> new NotFoundException("Product not found."));
 
         p.setName(req.name);
         p.setPrice(req.price);
@@ -57,7 +60,7 @@ public class ProductService {
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
-            throw new IllegalArgumentException("Product not found.");
+            throw new NotFoundException("Product not found.");
         }
         repository.deleteById(id);
     }
