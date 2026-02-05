@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Container } from "@mui/material";
 import { TopNav } from "./components/TopNav";
 import { ProductsPage } from "./pages/products/ProductsPage";
+import { RawMaterialsPage } from "./pages/raw-materials/RawMaterialsPage";
+import { ProductionPage } from "./pages/production/ProductionPage";
 
 export default function App() {
   return (
@@ -11,8 +13,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/products" replace />} />
           <Route path="/products" element={<ProductsPage />} />
-          {/* <Route path="/raw-materials" element={<RawMaterialsPage />} />
-          <Route path="/production" element={<ProductionPage />} /> */}
+          <Route path="/raw-materials" element={<RawMaterialsPage />} />
+          <Route path="/production" element={<ProductionPage />} />
         </Routes>
       </Container>
     </BrowserRouter>

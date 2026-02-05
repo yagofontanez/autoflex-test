@@ -1,49 +1,44 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  createProduct,
-  deleteProduct,
-  listProducts,
-  updateProduct,
-  type Product,
-  type ProductCreate,
-  type ProductUpdate,
-} from "../../api/products";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import { getErrorMessage } from "../../api/error";
-import {
   Alert,
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Paper,
   Stack,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
-import { ProductFormDialog } from "./ProductFormDialog";
-import { ProductMaterialsDialog } from "./materials/ProductMaterialsDialog";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import {
+  createRawMaterial,
+  deleteRawMaterial,
+  listRawMaterials,
+  updateRawMaterial,
+  type RawMaterial,
+  type RawMaterialCreate,
+  type RawMaterialUpdate,
+} from "../../api/rawMaterials";
+import { getErrorMessage } from "../../api/error";
+import { RawMaterialFormDialog } from "./RawMaterialFormDialog";
 
-export function ProductsPage() {
-  const [items, setItems] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+export function RawMaterialsPage() {
+  const [items, setItems] = useState<RawMaterial[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [selected, setSelected] = useState<Product | null>(null);
+  const [selected, setSelected] = useState<RawMaterial | null>(null);
 
-  const [confirmDelete, setConfirmDelete] = useState<Product | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<RawMaterial | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  const [materialsProduct, setMaterialsProduct] = useState<Product | null>(
-    null,
-  );
 
   const sorted = useMemo(
     () => [...items].sort((a, b) => a.code.localeCompare(b.code)),
@@ -53,9 +48,8 @@ export function ProductsPage() {
   async function refresh() {
     setLoading(true);
     setError(null);
-
     try {
-      const data = await listProducts();
+      const data = await listRawMaterials();
       setItems(data);
     } catch (e) {
       setError(getErrorMessage(e));
@@ -74,22 +68,20 @@ export function ProductsPage() {
     setDialogOpen(true);
   }
 
-  function openEdit(p: Product) {
+  function openEdit(rm: RawMaterial) {
     setMode("edit");
-    setSelected(p);
+    setSelected(rm);
     setDialogOpen(true);
   }
 
-  async function handleSubmit(payload: ProductCreate | ProductUpdate) {
+  async function handleSubmit(payload: RawMaterialCreate | RawMaterialUpdate) {
     setError(null);
-
     try {
       if (mode === "create") {
-        await createProduct(payload as ProductCreate);
+        await createRawMaterial(payload as RawMaterialCreate);
       } else if (selected) {
-        await updateProduct(selected.id, payload as ProductUpdate);
+        await updateRawMaterial(selected.id, payload as RawMaterialUpdate);
       }
-
       await refresh();
     } catch (e) {
       setError(getErrorMessage(e));
@@ -97,12 +89,11 @@ export function ProductsPage() {
     }
   }
 
-  async function handleDelete(p: Product) {
+  async function handleDelete(rm: RawMaterial) {
     setDeleting(true);
     setError(null);
-
     try {
-      await deleteProduct(p.id);
+      await deleteRawMaterial(rm.id);
       setConfirmDelete(null);
       await refresh();
     } catch (e) {
@@ -117,10 +108,10 @@ export function ProductsPage() {
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Box>
           <Typography variant="h5" fontWeight={700}>
-            Products
+            Raw Materials
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage products (code, name, price)
+            Manage raw materials (code, name, stock quantity)
           </Typography>
         </Box>
 
@@ -142,12 +133,12 @@ export function ProductsPage() {
             <Typography>Loading...</Typography>
           </Stack>
         ) : sorted.length === 0 ? (
-          <Typography>No products yet.</Typography>
+          <Typography color="text.secondary">No raw materials yet.</Typography>
         ) : (
           <Stack spacing={1}>
-            {sorted.map((p) => (
+            {sorted.map((rm) => (
               <Paper
-                key={p.id}
+                key={rm.id}
                 variant="outlined"
                 sx={{
                   p: 2,
@@ -158,28 +149,25 @@ export function ProductsPage() {
                   flexWrap: "wrap",
                 }}
               >
-                <Box sx={{ minWidth: 220 }}>
+                <Box sx={{ minWidth: 260 }}>
                   <Typography fontWeight={700}>
-                    {p.code} - {p.name}
+                    {rm.code} — {rm.name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Price: {Number(p.price).toFixed(2)}
+                    Stock: {Number(rm.stockQuantity).toFixed(3)}
                   </Typography>
                 </Box>
 
                 <Stack direction="row" spacing={1}>
-                  <IconButton aria-label="edit" onClick={() => openEdit(p)}>
+                  <IconButton aria-label="edit" onClick={() => openEdit(rm)}>
                     <EditIcon />
                   </IconButton>
                   <IconButton
                     aria-label="delete"
-                    onClick={() => setConfirmDelete(p)}
+                    onClick={() => setConfirmDelete(rm)}
                   >
                     <DeleteIcon />
                   </IconButton>
-                  <Button size="small" onClick={() => setMaterialsProduct(p)}>
-                    Materials
-                  </Button>
                 </Stack>
               </Paper>
             ))}
@@ -187,7 +175,7 @@ export function ProductsPage() {
         )}
       </Paper>
 
-      <ProductFormDialog
+      <RawMaterialFormDialog
         open={dialogOpen}
         mode={mode}
         initial={selected}
@@ -196,11 +184,10 @@ export function ProductsPage() {
       />
 
       <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle>Delete raw material</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete product "{confirmDelete?.code} -{" "}
-            {confirmDelete?.name}"?
+            Are you sure you want to delete <b>{confirmDelete?.code}</b>?
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -213,19 +200,10 @@ export function ProductsPage() {
             onClick={() => confirmDelete && handleDelete(confirmDelete)}
             disabled={deleting}
           >
-            {deleting ? <CircularProgress size={20} /> : "Delete"}
+            {deleting ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
-
-      {materialsProduct && (
-        <ProductMaterialsDialog
-          open={!!materialsProduct}
-          productId={materialsProduct.id}
-          productName={materialsProduct.name}
-          onClose={() => setMaterialsProduct(null)}
-        />
-      )}
     </Stack>
   );
 }
